@@ -18,6 +18,13 @@
         #result {
             margin-top: 20px;
         }
+        #addressList {
+            max-height: 150px;
+            overflow-y: auto;
+            margin-top: 10px;
+            border: 1px solid #ccc;
+            padding: 10px;
+        }
     </style>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -29,6 +36,7 @@
         <div id="map"></div> <!-- Map container -->
         <button id="clearButton">Clear Map</button>
         <div id="result"></div> <!-- Container for path results -->
+        <div id="addressList"></div> <!-- Container for address list -->
     </div>
     <form id="qualtricsForm">
         <textarea id="QR~QID2" rows="10" cols="50"></textarea>
@@ -132,6 +140,7 @@
             document.getElementById('result').innerHTML = 'All paths cleared.';
             distance = 0;
             addresses = [];
+            document.getElementById('addressList').innerHTML = ''; // Clear address list
         }
 
         // Get address details based on coordinates
@@ -142,12 +151,31 @@
                 .then(data => {
                     if (data && data.address) {
                         addresses.push(data.address);
-                        console.log('Address found:', data.address); // Debugging line
+                        displayAddress(data.address); // Display address in the list
                     } else {
                         console.log('No address found for:', latlng); // Debugging line
                     }
                 })
                 .catch(err => console.error('Error fetching address:', err));
+        }
+
+        // Display address in the addressList container
+        function displayAddress(address) {
+            let addressParts = [];
+            if (address.house_number || address.road) {
+                addressParts.push(`${address.house_number || ''} ${address.road || ''}`.trim());
+            }
+            if (address.city) { addressParts.push(address.city); }
+            if (address.county) { addressParts.push(address.county); }
+            if (address.state) { addressParts.push(address.state); }
+            if (address.country) { addressParts.push(address.country); }
+            if (address.postcode) { addressParts.push(address.postcode); }
+            const addressString = addressParts.join(', ').replace(/, $/, '') || 'No address found';
+            
+            const addressList = document.getElementById('addressList');
+            const addressItem = document.createElement('div');
+            addressItem.textContent = addressString;
+            addressList.appendChild(addressItem);
         }
 
         // Function to save data to Qualtrics (optional if you need additional handling)
