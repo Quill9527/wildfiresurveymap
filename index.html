@@ -3,186 +3,101 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Map Test with Leaflet</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-    <style>
-        #map {
-            height: 500px;
-            width: 100%;
-        }
-        #clearButton {
-            margin-top: 10px;
-        }
-        #result, #addressList {
-            margin-top: 20px;
-        }
-    </style>
+    <title>Leaflet Map with Geocoder</title>
+
+    <!-- 引入Leaflet和Geocoder样式与脚本 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+    <script src="https://cdn.jsdelivr.net/npm/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
 </head>
 <body>
-    <h1>Map Test</h1>
-    <div id="map"></div>
-    <button id="clearButton">Clear Map</button>
+    <!-- 地图容器 -->
+    <div id="map" style="height: 500px; width: 100%;"></div>
+    <!-- 显示路径信息的容器 -->
     <div id="result"></div>
-    <div id="addressList"></div>
+    <!-- 清除按钮 -->
+    <button id="clearButton">Clear Route</button>
 
-    <form id="qualtricsForm">
-        <textarea id="QR~QID1" rows="10" cols="50"></textarea>
-        <br>
-        <button type="button" onclick="saveDataToQualtrics()">Save Data</button>
-    </form>
+    <!-- 显示地址列表的容器 -->
+    <div id="addressList" style="max-height: 300px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;">
+        <!-- 地址项将在这里显示 -->
+    </div>
 
-    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-    <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
     <script>
-        // Initialize the map and set initial view
-        var map = L.map('map').setView([37, -120], 7); // Default coordinates for US
+        // 创建地图
+        var map = L.map('map').setView([51.505, -0.09], 13);
 
-        // Add OpenStreetMap tile layer
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap contributors'
-        }).addTo(map);
+        // 添加OpenStreetMap图层
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-        // Initialize markers, polyline, and other variables
-        var markers = [];
-        var polyline = L.polyline([], { color: 'blue', weight: 4 }).addTo(map);
-        var distance = 0; // To store the total distance
-        var addresses = []; // To store the list of addresses
+        // 创建Geocoder控件
+        var geocoder = L.Control.Geocoder.nominatim();
 
-        // Add geocoder control
-        var geocoder = L.Control.geocoder({
-            defaultMarkGeocode: false,
-            placeholder: "Enter address or postal code..."
-        }).on('markgeocode', function (event) {
-            var latlng = event.geocode.center;
-            map.setView(latlng, 13);
-            L.marker(latlng).addTo(map).bindPopup(event.geocode.name).openPopup();
-        }).addTo(map);
+        var route = [];
+        var addresses = [];
 
-        // Map click event to add marker and path
-        map.on('click', function (e) {
+        // 添加点击事件，获取地址并绘制路径
+        map.on('click', function(e) {
+            // 获取点击位置的经纬度
             var latlng = e.latlng;
-            var marker = L.marker(latlng).addTo(map);
-            markers.push({ marker: marker, latlng: latlng });
-            polyline.addLatLng(latlng);
-            calculateDistance(); // Update total distance after each click
-            getAddress(latlng); // Get address information from coordinates
+
+            // 使用Geocoder反向获取地址
+            geocoder.reverse(latlng, map.options.crs.scale(map.getZoom()), function(results) {
+                var result = results[0];
+                if (result) {
+                    // 显示地址列表
+                    var address = result.name;
+                    addresses.push(address);
+                    var addressDiv = document.createElement('div');
+                    addressDiv.innerHTML = address;
+                    document.getElementById('addressList').appendChild(addressDiv);
+
+                    // 添加路径到地图
+                    route.push(latlng);
+                    if (route.length > 1) {
+                        var polyline = L.polyline(route, {color: 'blue'}).addTo(map);
+                        document.getElementById('result').innerText = `路径: ${route.length}个点`;
+                    }
+
+                    // 发送路径信息到父页面
+                    sendDataToParent(route, addresses);
+                }
+            });
         });
 
-        // Map right-click event to end path drawing
-        map.on('contextmenu', function () {
-            if (markers.length > 1) {
-                alert('Path completed!');
-            } else {
-                alert('At least two points are needed to complete the path.');
-            }
-        });
-
-        // Clear button event to remove all markers and paths
-        document.getElementById('clearButton').addEventListener('click', function () {
-            if (confirm('Are you sure you want to clear all paths and markers?')) {
-                clearAll();
-            }
-        });
-
-        // Function to calculate the total distance of the polyline
-        function calculateDistance() {
-            var totalDistance = 0;
-            var pathPoints = polyline.getLatLngs();
-            for (var i = 1; i < pathPoints.length; i++) {
-                totalDistance += pathPoints[i - 1].distanceTo(pathPoints[i]);
-            }
-            distance = totalDistance / 1000; // Convert to kilometers
-            document.getElementById('result').innerHTML = `Distance: ${distance.toFixed(2)} km`;
-        }
-
-        // Function to clear all markers and polyline
-        function clearAll() {
-            markers.forEach(m => map.removeLayer(m.marker));
-            markers = [];
-            polyline.setLatLngs([]);
-            document.getElementById('result').innerHTML = 'All paths cleared.';
-            distance = 0;
+        // 清除按钮功能
+        document.getElementById('clearButton').addEventListener('click', function() {
+            route = [];
             addresses = [];
             document.getElementById('addressList').innerHTML = '';
-        }
-
-        // Function to get address from latitude and longitude using OpenStreetMap Nominatim API
-        function getAddress(latlng) {
-            const apiUrl = `https://nominatim.openstreetmap.org/reverse?lat=${latlng.lat}&lon=${latlng.lng}&format=json&addressdetails=1&accept-language=en`;
-            fetch(apiUrl)
-                .then(response => response.json())
-                .then(data => {
-                    if (data && data.address) {
-                        addresses.push(data.address);
-                        displayAddresses();
-                    }
-                })
-                .catch(console.error);
-        }
-
-        // Function to display list of addresses
-        function displayAddresses() {
-            const addressListContainer = document.getElementById('addressList');
-            addressListContainer.innerHTML = '';
-            addresses.forEach(function (address, index) {
-                let fullAddress = [
-                    address.house_number ? `${address.house_number} ${address.road || ''}`.trim() : '',
-                    address.city,
-                    address.county,
-                    address.state,
-                    address.country,
-                    address.postcode
-                ].filter(Boolean).join(', ');
-                const addressElement = document.createElement('div');
-                addressElement.textContent = `${index + 1}. ${fullAddress || 'No address found'}`;
-                addressListContainer.appendChild(addressElement);
+            document.getElementById('result').innerText = '';
+            map.eachLayer(function(layer) {
+                if (layer instanceof L.Polyline) {
+                    map.removeLayer(layer);
+                }
             });
+        });
+
+        // 发送数据到父页面（Qualtrics）
+        function sendDataToParent(route, addresses) {
+            const data = {
+                distance: calculateDistance(route),
+                path: route.join(" -> "),
+                addresses: addresses.join(", ")
+            };
+
+            // 使用 postMessage 将数据传递给父页面（Qualtrics）
+            window.parent.postMessage(data, "https://your-qualtrics-url.com");  // 请替换成实际的Qualtrics URL
         }
 
-        // Save data to Qualtrics
-        function saveDataToQualtrics() {
-            // Get path coordinates and convert to string format
-            var pathData = polyline.getLatLngs().map(function (latlng) {
-                return `${latlng.lat.toFixed(6)}, ${latlng.lng.toFixed(6)}`;
-            }).join(" -> ");
-            
-            // Get full address data, ensuring proper handling of each address
-            var addressData = addresses.map(function (addr) {
-                // Collect address parts, checking for empty fields and skipping them
-                let addressParts = [];
-
-                if (addr.house_number || addr.road) {
-                    addressParts.push(`${addr.house_number || ''} ${addr.road || ''}`.trim());
-                }
-                if (addr.city) {
-                    addressParts.push(addr.city);
-                }
-                if (addr.county) {
-                    addressParts.push(addr.county);
-                }
-                if (addr.state) {
-                    addressParts.push(addr.state);
-                }
-                if (addr.country) {
-                    addressParts.push(addr.country); // United States
-                }
-                if (addr.postcode) {
-                    addressParts.push(addr.postcode); // Postal code
-                }
-
-                let fullAddress = addressParts.join(', ').replace(/, $/, ''); // Clean up trailing comma
-                return fullAddress || 'No address found';
-            }).join(" | ");
-
-            // Save data to Text Entry field in Qualtrics
-            var textArea = document.getElementById('QR~QID1'); // Ensure this ID matches the Textarea ID in Qualtrics
-            if (textArea) {
-                // Save distance in the first line of Text Entry
-                textArea.value = `Distance: ${distance.toFixed(2)} km\nPath: ${pathData}\nAddresses: ${addressData}`;
-                console.log("Data saved to Text Entry:", textArea.value);
-            } else {
-                console.error('Text Entry element not found');
+        // 计算路径的总距离（简单实现）
+        function calculateDistance(route) {
+            let totalDistance = 0;
+            for (let i = 0; i < route.length - 1; i++) {
+                totalDistance += route[i].distanceTo(route[i + 1]);
             }
+            return totalDistance.toFixed(2) + " 米";  // 返回米为单位的总距离
         }
     </script>
 </body>
