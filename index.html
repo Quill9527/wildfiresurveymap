@@ -25,13 +25,9 @@
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
     <script>
-        // Your JavaScript code here (the one you shared with me earlier)
-        // Ensure to uncomment the first line if you want to use Qualtrics-specific features
-        // Qualtrics.SurveyEngine.addOnload(function () { 
         var mapContainer = document.getElementById('map');
         if (!mapContainer) {
             console.error('Map container not found. Ensure the HTML contains a <div id="map"> element.');
-            return;
         }
 
         // Create map and set initial view
@@ -69,7 +65,6 @@
         map.on('contextmenu', function () {
             if (markers.length > 1) {
                 alert('Path completed!');
-                // saveDataToQualtrics(); // Uncomment if saving data to Qualtrics
             } else {
                 alert('At least two points are needed to complete the path.');
             }
@@ -134,28 +129,6 @@
                 addressListContainer.appendChild(addressElement);
             });
         }
-
-        // Save data to Qualtrics (only relevant if you're using Qualtrics)
-        // function saveDataToQualtrics() { 
-        //     var pathData = polyline.getLatLngs().map(latlng => `${latlng.lat.toFixed(6)}, ${latlng.lng.toFixed(6)}`).join(" -> ");
-        //     var addressData = addresses.map(addr => {
-        //         return [
-        //             addr.house_number ? `${addr.house_number} ${addr.road || ''}`.trim() : '',
-        //             addr.city,
-        //             addr.county,
-        //             addr.state,
-        //             addr.country,
-        //             addr.postcode
-        //         ].filter(Boolean).join(', ');
-        //     }).join(" | ");
-        //     var textArea = document.getElementById('QR~QID1');
-        //     if (textArea) {
-        //         textArea.value = `Distance: ${distance.toFixed(2)} km\nPath: ${pathData}\nAddresses: ${addressData}`;
-        //     } else {
-        //         console.error('Text Entry element not found');
-        //     }
-        // }
-        // });
     </script>
 </body>
 </html>
