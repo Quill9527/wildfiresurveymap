@@ -175,7 +175,7 @@
             }).join(" | ");
 
             // Save data to Text Entry field in Qualtrics
-            var textArea = document.getElementById('QR~QID1'); // Ensure this ID matches the Textarea ID in Qualtrics
+            var textArea = document.getElementById('QR~QID2'); // Ensure this ID matches the Textarea ID in Qualtrics
             if (textArea) {
                 // Save distance in the first line of Text Entry
                 textArea.value = `Distance: ${distance.toFixed(2)} km\nPath: ${pathData}\nAddresses: ${addressData}`;
