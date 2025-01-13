@@ -38,11 +38,6 @@
         <div id="result"></div> <!-- Container for path results -->
         <div id="addressList"></div> <!-- Container for address list -->
     </div>
-    <form id="qualtricsForm">
-        <textarea id="QR~QID2" rows="10" cols="50"></textarea>
-        <br>
-        <button type="button" onclick="saveDataToQualtrics()">Save Data to Qualtrics</button>
-    </form>
 
     <script type="text/javascript">
         // Initialize the map
@@ -177,33 +172,6 @@
             addressItem.textContent = addressString;
             addressList.appendChild(addressItem);
         }
-
-        // Function to save data to Qualtrics (optional if you need additional handling)
-        function saveDataToQualtrics() {
-            // This function can handle additional actions if needed
-            alert('Data saved to Qualtrics!');
-        }
-
-        // Function to handle postMessage event in Qualtrics
-        window.addEventListener('message', function(event) {
-            if (event.data.type === 'mapData') {
-                // Extract data from the event
-                var pathData = event.data.pathData;
-                var addressData = event.data.addressData;
-                var distance = event.data.distance;
-
-                // Combine the data into a single string or format as needed
-                var combinedData = `Path: ${pathData}\nAddresses: ${addressData}\nDistance: ${distance} km`;
-
-                // Set the combined data into the Qualtrics text area
-                var textEntry = document.querySelector('textarea[id*="QR~QID2"]');
-                if (textEntry) {
-                    textEntry.value = combinedData;
-                } else {
-                    console.error('Text entry field not found!');
-                }
-            }
-        }, false);
     </script>
 </body>
 </html>
