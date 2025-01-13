@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-   
+    <title>Map Test with Leaflet</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <style>
         #map {
@@ -19,7 +19,7 @@
     </style>
 </head>
 <body>
-    
+    <h1>Map Test</h1>
     <div id="map"></div>
     <button id="clearButton">Clear Map</button>
     <div id="result"></div>
@@ -72,7 +72,6 @@
         map.on('contextmenu', function () {
             if (markers.length > 1) {
                 alert('Path completed!');
-                saveDataToQualtrics(); // Save data
             } else {
                 alert('At least two points are needed to complete the path.');
             }
@@ -176,59 +175,14 @@
             }).join(" | ");
 
             // Save data to Text Entry field in Qualtrics
-            // var textArea = document.getElementById('QR~QID2'); // Ensure this ID matches the Textarea ID in Qualtrics
-            // if (textArea) {
-            //     // Save distance in the first line of Text Entry
-            //     textArea.value = `Distance: ${distance.toFixed(2)} km\nPath: ${pathData}\nAddresses: ${addressData}`;
-            //     console.log("Data saved to Text Entry:", textArea.value);
-            // } else {
-            //     console.error('Text Entry element not found');
-            // }
-            function saveDataToQualtrics() {
-    // Get path coordinates and convert to string format
-    var pathData = polyline.getLatLngs().map(function (latlng) {
-        return `${latlng.lat.toFixed(6)}, ${latlng.lng.toFixed(6)}`;
-    }).join(" -> ");
-    
-    // Get full address data, ensuring proper handling of each address
-    var addressData = addresses.map(function (addr) {
-        // Collect address parts, checking for empty fields and skipping them
-        let addressParts = [];
-
-        if (addr.house_number || addr.road) {
-            addressParts.push(`${addr.house_number || ''} ${addr.road || ''}`.trim());
-        }
-        if (addr.city) {
-            addressParts.push(addr.city);
-        }
-        if (addr.county) {
-            addressParts.push(addr.county);
-        }
-        if (addr.state) {
-            addressParts.push(addr.state);
-        }
-        if (addr.country) {
-            addressParts.push(addr.country); // United States
-        }
-        if (addr.postcode) {
-            addressParts.push(addr.postcode); // Postal code
-        }
-
-        let fullAddress = addressParts.join(', ').replace(/, $/, ''); // Clean up trailing comma
-        return fullAddress || 'No address found';
-    }).join(" | ");
-
-    // Save data to Text Entry field in Qualtrics
-    var textArea = document.getElementById('QR~QID1'); // Ensure this ID matches the Textarea ID in Qualtrics
-    if (textArea) {
-        // Save distance in the first line of Text Entry
-        textArea.value = `Distance: ${distance.toFixed(2)} km\nPath: ${pathData}\nAddresses: ${addressData}`;
-        console.log("Data saved to Text Entry:", textArea.value);
-    } else {
-        console.error('Text Entry element not found');
-    }
-}
-
+            var textArea = document.getElementById('QR~QID2'); // Ensure this ID matches the Textarea ID in Qualtrics
+            if (textArea) {
+                // Save distance in the first line of Text Entry
+                textArea.value = `Distance: ${distance.toFixed(2)} km\nPath: ${pathData}\nAddresses: ${addressData}`;
+                console.log("Data saved to Text Entry:", textArea.value);
+            } else {
+                console.error('Text Entry element not found');
+            }
         }
     </script>
 </body>
