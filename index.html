@@ -30,11 +30,6 @@
             margin-bottom: 5px;
             cursor: pointer;
         }
-        #instructions {
-            margin-top: 10px;
-            margin-bottom: 10px;
-            font-size: 1.1em;
-        }
     </style>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -42,9 +37,6 @@
     <script src="https://cdn.jsdelivr.net/npm/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
 </head>
 <body>
-    <div id="instructions">
-        Please left-click on the map to select the addresses you pass through during evacuation. Right-click to complete the drawing of the evacuation route.
-    </div>
     <div id="map-container">
         <div id="map"></div> <!-- Map container -->
         <button id="removeLastButton">Remove Last Location</button>
@@ -92,33 +84,7 @@
         // Right-click to finish the path drawing
         map.on('contextmenu', function () {
             if (markers.length > 1) {
-                alert('Path completed!');
-                
-                // Send data via postMessage to parent window
-                var pathData = polyline.getLatLngs().map(function (latlng) {
-                    return `${latlng.lat.toFixed(6)}, ${latlng.lng.toFixed(6)}`;
-                }).join(" -> ");
-                
-                var addressData = addresses.map(function (addr) {
-                    let addressParts = [];
-                    if (addr.house_number || addr.road) {
-                        addressParts.push(`${addr.house_number || ''} ${addr.road || ''}`.trim());
-                    }
-                    if (addr.city) { addressParts.push(addr.city); }
-                    if (addr.county) { addressParts.push(addr.county); }
-                    if (addr.state) { addressParts.push(addr.state); }
-                    if (addr.country) { addressParts.push(addr.country); }
-                    if (addr.postcode) { addressParts.push(addr.postcode); }
-                    return addressParts.join(', ').replace(/, $/, '') || 'No address found';
-                }).join(" | ");
-
-                // Post data to parent window
-                window.parent.postMessage({
-                    type: 'mapData',  // Message type to identify data
-                    pathData: pathData,
-                    addressData: addressData,
-                    distance: distance.toFixed(2)
-                }, '*');  // '*' allows all domains to receive the message
+                recordRouteInformation();
             } else {
                 alert('At least two points are needed to complete the path.');
             }
@@ -147,7 +113,7 @@
 
         // Submit the evacuation route information
         document.getElementById('submitButton').addEventListener('click', function () {
-            alert('Evacuation route information has been saved!');
+            recordRouteInformation();
         });
 
         // Function to calculate the total path distance
@@ -230,6 +196,39 @@
             const addressList = document.getElementById('addressList');
             addressList.innerHTML = '';
             addresses.forEach(address => displayAddress(address));
+        }
+
+        // Function to record the route information
+        function recordRouteInformation() {
+            if (markers.length > 1) {
+                var pathData = polyline.getLatLngs().map(function (latlng) {
+                    return `${latlng.lat.toFixed(6)}, ${latlng.lng.toFixed(6)}`;
+                }).join(" -> ");
+                
+                var addressData = addresses.map(function (addr) {
+                    let addressParts = [];
+                    if (addr.house_number || addr.road) {
+                        addressParts.push(`${addr.house_number || ''} ${addr.road || ''}`.trim());
+                    }
+                    if (addr.city) { addressParts.push(addr.city); }
+                    if (addr.county) { addressParts.push(addr.county); }
+                    if (addr.state) { addressParts.push(addr.state); }
+                    if (addr.country) { addressParts.push(addr.country); }
+                    if (addr.postcode) { addressParts.push(addr.postcode); }
+                    return addressParts.join(', ').replace(/, $/, '') || 'No address found';
+                }).join(" | ");
+
+                window.parent.postMessage({
+                    type: 'mapData',  // Message type to identify data
+                    pathData: pathData,
+                    addressData: addressData,
+                    distance: distance.toFixed(2)
+                }, '*');  // '*' allows all domains to receive the message
+
+                alert('Route Information Recorded');
+            } else {
+                alert('At least two points are needed to record the route.');
+            }
         }
     </script>
 </body>
