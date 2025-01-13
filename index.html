@@ -225,6 +225,12 @@
                     distance: distance.toFixed(2)
                 }, '*');  // '*' allows all domains to receive the message
 
+                console.log('Route Information Recorded:', {
+                    pathData: pathData,
+                    addressData: addressData,
+                    distance: distance.toFixed(2)
+                });
+
                 alert('Route Information Recorded');
             } else {
                 alert('At least two points are needed to record the route.');
