@@ -25,6 +25,12 @@
     <div id="result"></div>
     <div id="addressList"></div>
 
+    <form id="qualtricsForm">
+        <textarea id="QR~QID1" rows="10" cols="50"></textarea>
+        <br>
+        <button type="button" onclick="saveDataToQualtrics()">Save Data</button>
+    </form>
+
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
     <script>
@@ -131,6 +137,52 @@
                 addressElement.textContent = `${index + 1}. ${fullAddress || 'No address found'}`;
                 addressListContainer.appendChild(addressElement);
             });
+        }
+
+        // Save data to Qualtrics
+        function saveDataToQualtrics() {
+            // Get path coordinates and convert to string format
+            var pathData = polyline.getLatLngs().map(function (latlng) {
+                return `${latlng.lat.toFixed(6)}, ${latlng.lng.toFixed(6)}`;
+            }).join(" -> ");
+            
+            // Get full address data, ensuring proper handling of each address
+            var addressData = addresses.map(function (addr) {
+                // Collect address parts, checking for empty fields and skipping them
+                let addressParts = [];
+
+                if (addr.house_number || addr.road) {
+                    addressParts.push(`${addr.house_number || ''} ${addr.road || ''}`.trim());
+                }
+                if (addr.city) {
+                    addressParts.push(addr.city);
+                }
+                if (addr.county) {
+                    addressParts.push(addr.county);
+                }
+                if (addr.state) {
+                    addressParts.push(addr.state);
+                }
+                if (addr.country) {
+                    addressParts.push(addr.country); // United States
+                }
+                if (addr.postcode) {
+                    addressParts.push(addr.postcode); // Postal code
+                }
+
+                let fullAddress = addressParts.join(', ').replace(/, $/, ''); // Clean up trailing comma
+                return fullAddress || 'No address found';
+            }).join(" | ");
+
+            // Save data to Text Entry field in Qualtrics
+            var textArea = document.getElementById('QR~QID1'); // Ensure this ID matches the Textarea ID in Qualtrics
+            if (textArea) {
+                // Save distance in the first line of Text Entry
+                textArea.value = `Distance: ${distance.toFixed(2)} km\nPath: ${pathData}\nAddresses: ${addressData}`;
+                console.log("Data saved to Text Entry:", textArea.value);
+            } else {
+                console.error('Text Entry element not found');
+            }
         }
     </script>
 </body>
