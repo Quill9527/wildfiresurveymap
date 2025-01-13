@@ -12,8 +12,9 @@
             height: 400px;
             width: 100%;
         }
-        #clearButton {
+        #clearButton, #removeLastButton, #submitButton {
             margin-top: 10px;
+            margin-right: 10px;
         }
         #result {
             margin-top: 20px;
@@ -29,6 +30,11 @@
             margin-bottom: 5px;
             cursor: pointer;
         }
+        #instructions {
+            margin-top: 10px;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
     </style>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -36,9 +42,14 @@
     <script src="https://cdn.jsdelivr.net/npm/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
 </head>
 <body>
+    <div id="instructions">
+        Please left-click on the map to select the addresses you pass through during evacuation. Right-click to complete the drawing of the evacuation route.
+    </div>
     <div id="map-container">
         <div id="map"></div> <!-- Map container -->
+        <button id="removeLastButton">Remove Last Location</button>
         <button id="clearButton">Clear Map</button>
+        <button id="submitButton">Submit Answer</button>
         <div id="result"></div> <!-- Container for path results -->
         <div id="addressList"></div> <!-- Container for address list -->
     </div>
@@ -120,7 +131,26 @@
             }
         });
 
-        // Calculate total path distance
+        // Remove the last added marker and update the path
+        document.getElementById('removeLastButton').addEventListener('click', function () {
+            if (markers.length > 0) {
+                var lastMarker = markers.pop();
+                map.removeLayer(lastMarker.marker);
+                addresses.pop();
+                polyline.setLatLngs(markers.map(m => m.latlng));
+                calculateDistance();
+                updateAddressList();
+            } else {
+                alert('No more markers to remove.');
+            }
+        });
+
+        // Submit the evacuation route information
+        document.getElementById('submitButton').addEventListener('click', function () {
+            alert('Evacuation route information has been saved!');
+        });
+
+        // Function to calculate the total path distance
         function calculateDistance() {
             var totalDistance = 0;
             var pathPoints = polyline.getLatLngs();
@@ -131,7 +161,7 @@
             document.getElementById('result').innerHTML = `Distance: ${distance.toFixed(2)} km`;
         }
 
-        // Clear all markers and polyline
+        // Function to clear all markers and polyline
         function clearAll() {
             markers.forEach(m => map.removeLayer(m.marker));
             markers = [];
@@ -142,7 +172,7 @@
             document.getElementById('addressList').innerHTML = ''; // Clear address list
         }
 
-        // Get address details based on coordinates
+        // Function to get address details based on coordinates
         function getAddress(latlng) {
             const apiUrl = `https://nominatim.openstreetmap.org/reverse?lat=${latlng.lat}&lon=${latlng.lng}&format=json&addressdetails=1&accept-language=en`;
             fetch(apiUrl)
@@ -158,7 +188,7 @@
                 .catch(err => console.error('Error fetching address:', err));
         }
 
-        // Display address in the addressList container
+        // Function to display an address in the addressList container
         function displayAddress(address) {
             let addressParts = [];
             if (address.house_number || address.road) {
@@ -181,7 +211,7 @@
             addressList.appendChild(addressItem);
         }
 
-        // Remove marker and address
+        // Function to remove a marker and address
         function removeMarker(addressItem, address) {
             const index = addresses.indexOf(address);
             if (index > -1) {
@@ -193,6 +223,13 @@
                 calculateDistance();
                 addressItem.remove();
             }
+        }
+
+        // Function to update the address list
+        function updateAddressList() {
+            const addressList = document.getElementById('addressList');
+            addressList.innerHTML = '';
+            addresses.forEach(address => displayAddress(address));
         }
     </script>
 </body>
