@@ -58,7 +58,7 @@
             var marker = L.marker(latlng).addTo(map);
             markers.push({ marker: marker, latlng: latlng });
             polyline.addLatLng(latlng);
-            calculateDistance(); // Update total distance
+            calculateDistance(); // Update total distance after each click
             getAddress(latlng); // Get address information from coordinates
         });
 
