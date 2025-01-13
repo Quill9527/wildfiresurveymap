@@ -3,15 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Map Test</title>
+    <title>Map Test with Leaflet</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <style>
         #map {
-            height: 400px;
+            height: 500px;
             width: 100%;
         }
         #clearButton {
             margin-top: 10px;
+        }
+        #result, #addressList {
+            margin-top: 20px;
         }
     </style>
 </head>
@@ -25,23 +28,21 @@
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
     <script>
-        var mapContainer = document.getElementById('map');
-        if (!mapContainer) {
-            console.error('Map container not found. Ensure the HTML contains a <div id="map"> element.');
-        }
+        // Initialize the map and set initial view
+        var map = L.map('map').setView([37, -120], 7); // Default coordinates for US
 
-        // Create map and set initial view
-        var map = L.map('map').setView([37, -120], 7); // Initial view position
+        // Add OpenStreetMap tile layer
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            attribution: '&copy; OpenStreetMap contributors'
         }).addTo(map);
 
-        var markers = []; // Store markers
-        var polyline = L.polyline([], { color: 'blue', weight: 4 }).addTo(map); // Store path
-        var distance = 0; // Calculate total path distance
-        var addresses = []; // Store address information
+        // Initialize markers, polyline, and other variables
+        var markers = [];
+        var polyline = L.polyline([], { color: 'blue', weight: 4 }).addTo(map);
+        var distance = 0; // To store the total distance
+        var addresses = []; // To store the list of addresses
 
-        // Add geocoder
+        // Add geocoder control
         var geocoder = L.Control.geocoder({
             defaultMarkGeocode: false,
             placeholder: "Enter address or postal code..."
@@ -51,17 +52,17 @@
             L.marker(latlng).addTo(map).bindPopup(event.geocode.name).openPopup();
         }).addTo(map);
 
-        // Map click event: Add marker and path
+        // Map click event to add marker and path
         map.on('click', function (e) {
             var latlng = e.latlng;
             var marker = L.marker(latlng).addTo(map);
             markers.push({ marker: marker, latlng: latlng });
             polyline.addLatLng(latlng);
-            calculateDistance(); // Update distance
-            getAddress(latlng); // Get address information
+            calculateDistance(); // Update total distance
+            getAddress(latlng); // Get address information from coordinates
         });
 
-        // Map right-click event: End path drawing
+        // Map right-click event to end path drawing
         map.on('contextmenu', function () {
             if (markers.length > 1) {
                 alert('Path completed!');
@@ -70,14 +71,14 @@
             }
         });
 
-        // Clear button event: Clear all markers and path
+        // Clear button event to remove all markers and paths
         document.getElementById('clearButton').addEventListener('click', function () {
             if (confirm('Are you sure you want to clear all paths and markers?')) {
                 clearAll();
             }
         });
 
-        // Calculate total path distance
+        // Function to calculate the total distance of the polyline
         function calculateDistance() {
             var totalDistance = 0;
             var pathPoints = polyline.getLatLngs();
@@ -87,7 +88,7 @@
             distance = totalDistance / 1000; // Convert to kilometers
         }
 
-        // Clear all markers and path
+        // Function to clear all markers and polyline
         function clearAll() {
             markers.forEach(m => map.removeLayer(m.marker));
             markers = [];
@@ -97,7 +98,7 @@
             addresses = [];
         }
 
-        // Fetch address from latitude and longitude
+        // Function to get address from latitude and longitude using OpenStreetMap Nominatim API
         function getAddress(latlng) {
             const apiUrl = `https://nominatim.openstreetmap.org/reverse?lat=${latlng.lat}&lon=${latlng.lng}&format=json&addressdetails=1&accept-language=en`;
             fetch(apiUrl)
@@ -111,7 +112,7 @@
                 .catch(console.error);
         }
 
-        // Display address list
+        // Function to display list of addresses
         function displayAddresses() {
             const addressListContainer = document.getElementById('addressList');
             addressListContainer.innerHTML = '';
