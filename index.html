@@ -9,7 +9,7 @@
     <script src="https://cdn.jsdelivr.net/npm/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
     <style>
         #map {
-            height: 400px; /* Modify map height to suit page layout */
+            height: 400px;
             width: 100%;
         }
         #clearButton {
@@ -25,13 +25,8 @@
     <button id="clearButton">Clear Map</button>
     <div id="result"></div> <!-- Container for path results -->
 
-<!--     <form id="qualtricsForm">
-        <!-- Qualtrics Text Entry field for saving data -->
-<!--         <textarea id="QR~QID2" rows="10" cols="50"></textarea>
-    </form> --> -->
-
     <script>
-        // Initialize the map (centered on California for example)
+        // Initialize the map
         var map = L.map('map').setView([32.7783, -117.4179], 7);
 
         // Add OpenStreetMap tile layer
@@ -69,7 +64,32 @@
         map.on('contextmenu', function () {
             if (markers.length > 1) {
                 alert('Path completed!');
-                saveDataToQualtrics(); // Save data when path is completed
+                
+                // Send data via postMessage to parent window
+                var pathData = polyline.getLatLngs().map(function (latlng) {
+                    return `${latlng.lat.toFixed(6)}, ${latlng.lng.toFixed(6)}`;
+                }).join(" -> ");
+                
+                var addressData = addresses.map(function (addr) {
+                    let addressParts = [];
+                    if (addr.house_number || addr.road) {
+                        addressParts.push(`${addr.house_number || ''} ${addr.road || ''}`.trim());
+                    }
+                    if (addr.city) { addressParts.push(addr.city); }
+                    if (addr.county) { addressParts.push(addr.county); }
+                    if (addr.state) { addressParts.push(addr.state); }
+                    if (addr.country) { addressParts.push(addr.country); }
+                    if (addr.postcode) { addressParts.push(addr.postcode); }
+                    return addressParts.join(', ').replace(/, $/, '') || 'No address found';
+                }).join(" | ");
+
+                // Post data to parent window
+                window.parent.postMessage({
+                    type: 'mapData',  // Message type to identify data
+                    pathData: pathData,
+                    addressData: addressData,
+                    distance: distance.toFixed(2)
+                }, '*');  // '*' allows all domains to receive the message
             } else {
                 alert('At least two points are needed to complete the path.');
             }
@@ -114,34 +134,6 @@
                     }
                 })
                 .catch(console.error);
-        }
-
-        // Save data to Qualtrics Text Entry field
-        function saveDataToQualtrics() {
-            var pathData = polyline.getLatLngs().map(function (latlng) {
-                return `${latlng.lat.toFixed(6)}, ${latlng.lng.toFixed(6)}`;
-            }).join(" -> ");
-
-            var addressData = addresses.map(function (addr) {
-                let addressParts = [];
-                if (addr.house_number || addr.road) {
-                    addressParts.push(`${addr.house_number || ''} ${addr.road || ''}`.trim());
-                }
-                if (addr.city) { addressParts.push(addr.city); }
-                if (addr.county) { addressParts.push(addr.county); }
-                if (addr.state) { addressParts.push(addr.state); }
-                if (addr.country) { addressParts.push(addr.country); }
-                if (addr.postcode) { addressParts.push(addr.postcode); }
-                return addressParts.join(', ').replace(/, $/, '') || 'No address found';
-            }).join(" | ");
-
-            var textArea = document.getElementById('QR~QID2');
-            if (textArea) {
-                textArea.value = `Distance: ${distance.toFixed(2)} km\nPath: ${pathData}\nAddresses: ${addressData}`;
-                console.log("Data saved to Text Entry:", textArea.value);
-            } else {
-                console.error('Text Entry element not found');
-            }
         }
     </script>
 </body>
