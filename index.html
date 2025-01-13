@@ -86,6 +86,7 @@
                 totalDistance += pathPoints[i - 1].distanceTo(pathPoints[i]);
             }
             distance = totalDistance / 1000; // Convert to kilometers
+            document.getElementById('result').innerHTML = `Distance: ${distance.toFixed(2)} km`;
         }
 
         // Function to clear all markers and polyline
@@ -96,6 +97,7 @@
             document.getElementById('result').innerHTML = 'All paths cleared.';
             distance = 0;
             addresses = [];
+            document.getElementById('addressList').innerHTML = '';
         }
 
         // Function to get address from latitude and longitude using OpenStreetMap Nominatim API
