@@ -9,7 +9,7 @@
     <script src="https://cdn.jsdelivr.net/npm/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
     <style>
         #map {
-            height: 400px; /* 修改地图高度，使其更适应页面 */
+            height: 400px; /* Modify map height to suit page layout */
             width: 100%;
         }
         #clearButton {
@@ -21,33 +21,33 @@
     </style>
 </head>
 <body>
-    <div id="map"></div> <!-- 地图容器 -->
+    <div id="map"></div> <!-- Map container -->
     <button id="clearButton">Clear Map</button>
-    <div id="result"></div> <!-- 显示路径的容器 -->
+    <div id="result"></div> <!-- Container for path results -->
 
     <form id="qualtricsForm">
-        <!-- 这是Qualtrics的Text Entry字段，将保存所有数据 -->
+        <!-- Qualtrics Text Entry field for saving data -->
         <textarea id="QR~QID1" rows="10" cols="50"></textarea>
         <br>
         <button type="button" onclick="saveDataToQualtrics()">Save Data to Qualtrics</button>
     </form>
 
     <script>
-        // 初始化地图，设置视图为加利福尼亚
-        var map = L.map('map').setView([36.7783, -119.4179], 7); // 加利福尼亚的坐标
+        // Initialize the map (centered on California for example)
+        var map = L.map('map').setView([36.7783, -119.4179], 7);
 
-        // 添加OpenStreetMap瓦片图层
+        // Add OpenStreetMap tile layer
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; OpenStreetMap contributors'
         }).addTo(map);
 
-        // 初始化标记、折线和其他变量
+        // Initialize variables for markers, polyline, distance, and addresses
         var markers = [];
         var polyline = L.polyline([], { color: 'blue', weight: 4 }).addTo(map);
-        var distance = 0; // 存储总距离
-        var addresses = []; // 存储地址列表
+        var distance = 0;
+        var addresses = [];
 
-        // 添加地理编码控制器
+        // Add geocoder control for address search
         var geocoder = L.Control.geocoder({
             defaultMarkGeocode: false,
             placeholder: "Enter address or postal code..."
@@ -57,44 +57,45 @@
             L.marker(latlng).addTo(map).bindPopup(event.geocode.name).openPopup();
         }).addTo(map);
 
-        // 地图点击事件，用于添加标记和路径
+        // Map click event for adding markers and calculating path
         map.on('click', function (e) {
             var latlng = e.latlng;
             var marker = L.marker(latlng).addTo(map);
             markers.push({ marker: marker, latlng: latlng });
             polyline.addLatLng(latlng);
-            calculateDistance(); // 每次点击后更新总距离
-            getAddress(latlng); // 获取坐标的地址信息
+            calculateDistance();
+            getAddress(latlng);
         });
 
-        // 地图右键点击事件，用于结束路径绘制
+        // Right-click to finish the path drawing
         map.on('contextmenu', function () {
             if (markers.length > 1) {
                 alert('Path completed!');
+                saveDataToQualtrics(); // Save data when path is completed
             } else {
                 alert('At least two points are needed to complete the path.');
             }
         });
 
-        // 清除按钮事件，用于删除所有标记和路径
+        // Clear map data (markers, polyline)
         document.getElementById('clearButton').addEventListener('click', function () {
             if (confirm('Are you sure you want to clear all paths and markers?')) {
                 clearAll();
             }
         });
 
-        // 计算折线的总距离
+        // Calculate total path distance
         function calculateDistance() {
             var totalDistance = 0;
             var pathPoints = polyline.getLatLngs();
             for (var i = 1; i < pathPoints.length; i++) {
                 totalDistance += pathPoints[i - 1].distanceTo(pathPoints[i]);
             }
-            distance = totalDistance / 1000; // 转换为公里
+            distance = totalDistance / 1000; // Convert to kilometers
             document.getElementById('result').innerHTML = `Distance: ${distance.toFixed(2)} km`;
         }
 
-        // 清除所有标记和折线
+        // Clear all markers and polyline
         function clearAll() {
             markers.forEach(m => map.removeLayer(m.marker));
             markers = [];
@@ -104,7 +105,7 @@
             addresses = [];
         }
 
-        // 根据经纬度获取地址信息
+        // Get address details based on coordinates
         function getAddress(latlng) {
             const apiUrl = `https://nominatim.openstreetmap.org/reverse?lat=${latlng.lat}&lon=${latlng.lng}&format=json&addressdetails=1&accept-language=en`;
             fetch(apiUrl)
@@ -117,41 +118,25 @@
                 .catch(console.error);
         }
 
-        // 将数据保存到Qualtrics
+        // Save data to Qualtrics Text Entry field
         function saveDataToQualtrics() {
-            // 获取路径坐标并转换为字符串格式
             var pathData = polyline.getLatLngs().map(function (latlng) {
                 return `${latlng.lat.toFixed(6)}, ${latlng.lng.toFixed(6)}`;
             }).join(" -> ");
-            
-            // 获取完整的地址数据
+
             var addressData = addresses.map(function (addr) {
                 let addressParts = [];
-
                 if (addr.house_number || addr.road) {
                     addressParts.push(`${addr.house_number || ''} ${addr.road || ''}`.trim());
                 }
-                if (addr.city) {
-                    addressParts.push(addr.city);
-                }
-                if (addr.county) {
-                    addressParts.push(addr.county);
-                }
-                if (addr.state) {
-                    addressParts.push(addr.state);
-                }
-                if (addr.country) {
-                    addressParts.push(addr.country); 
-                }
-                if (addr.postcode) {
-                    addressParts.push(addr.postcode); 
-                }
-
-                let fullAddress = addressParts.join(', ').replace(/, $/, '');
-                return fullAddress || 'No address found';
+                if (addr.city) { addressParts.push(addr.city); }
+                if (addr.county) { addressParts.push(addr.county); }
+                if (addr.state) { addressParts.push(addr.state); }
+                if (addr.country) { addressParts.push(addr.country); }
+                if (addr.postcode) { addressParts.push(addr.postcode); }
+                return addressParts.join(', ').replace(/, $/, '') || 'No address found';
             }).join(" | ");
 
-            // 将数据保存到Qualtrics的Text Entry字段
             var textArea = document.getElementById('QR~QID1');
             if (textArea) {
                 textArea.value = `Distance: ${distance.toFixed(2)} km\nPath: ${pathData}\nAddresses: ${addressData}`;
