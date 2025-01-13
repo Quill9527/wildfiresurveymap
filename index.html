@@ -148,6 +148,7 @@
                         addresses.push(data.address);
                         displayAddress(data.address); // Display address in the list
                     } else {
+                        addresses.push({}); // Push an empty object if no address is found
                         console.log('No address found for:', latlng); // Debugging line
                     }
                 })
