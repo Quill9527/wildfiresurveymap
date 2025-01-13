@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Map Test with Leaflet</title>
+    <title>Map Test</title> <!-- 删除原标题 -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-control-geocoder/dist/Control.Geocoder.css" />
     <script src="https://cdn.jsdelivr.net/npm/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
     <style>
         #map {
-            height: 500px;
+            height: 400px; /* 修改地图高度，使其更适应页面 */
             width: 100%;
         }
         #clearButton {
@@ -22,16 +22,16 @@
     </style>
 </head>
 <body>
-    <h1>Map Test - California</h1>
-    <div id="map"></div>
+    <div id="map"></div> <!-- 地图容器 -->
     <button id="clearButton">Clear Map</button>
-    <div id="result"></div>
-    <div id="addressList"></div>
+    <div id="result"></div> <!-- 显示路径的容器 -->
+    <div id="addressList"></div> <!-- 显示地址列表容器 -->
 
     <form id="qualtricsForm">
+        <!-- 这里是Qualtrics的Text Entry字段，应该与Qualtrics问卷中的QID相匹配 -->
         <textarea id="QR~QID1" rows="10" cols="50"></textarea>
         <br>
-        <button type="button" onclick="saveDataToQualtrics()">Save Data</button>
+        <button type="button" onclick="saveDataToQualtrics()">Save Data to Qualtrics</button>
     </form>
 
     <script>
