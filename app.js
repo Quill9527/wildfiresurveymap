@@ -1,4 +1,4 @@
-Qualtrics.SurveyEngine.addOnload(function () {
+//Qualtrics.SurveyEngine.addOnload(function () {
     var mapContainer = document.getElementById('map');
     if (!mapContainer) {
         console.error('Map container not found. Ensure the HTML contains a <div id="map"> element.');
@@ -126,4 +126,4 @@ Qualtrics.SurveyEngine.addOnload(function () {
             console.error('Text Entry element not found');
         }
     }
-});
+//});
