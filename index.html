@@ -27,7 +27,7 @@
 
     <form id="qualtricsForm">
         <!-- Qualtrics Text Entry field for saving data -->
-        <textarea id="QR~QID1" rows="10" cols="50"></textarea>
+        <textarea id="QR~QID2" rows="10" cols="50"></textarea>
         <br>
         <button type="button" onclick="saveDataToQualtrics()">Save Data to Qualtrics</button>
     </form>
@@ -137,7 +137,7 @@
                 return addressParts.join(', ').replace(/, $/, '') || 'No address found';
             }).join(" | ");
 
-            var textArea = document.getElementById('QR~QID1');
+            var textArea = document.getElementById('QR~QID2');
             if (textArea) {
                 textArea.value = `Distance: ${distance.toFixed(2)} km\nPath: ${pathData}\nAddresses: ${addressData}`;
                 console.log("Data saved to Text Entry:", textArea.value);
